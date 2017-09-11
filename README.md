@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/sealink/synchronised-migration-rb.svg?branch=master)](https://travis-ci.org/sealink/synchronised-migration-rb)
 
-This gem makes it possible to deployment multiple instances with data migration
+This gem makes it possible to deploy multiple instances with data migration
 simultaneously.  It uses Redis to ensure that there will be only one migration
 running.
 
