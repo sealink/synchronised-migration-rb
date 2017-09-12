@@ -26,7 +26,7 @@ RedisConfig.get[:db] # 0
 You may override these settings through environment variables.
 
 ```
-SYNC_RAKE_TASK=launch:migrate
+SYNCHRONISED_COMMAND=bin/launch/migrate
 REDLOCK_TIMEOUT_MS=3600000
 REDLOCK_RETRY_DELAY_MS=200
 REDLOCK_LOCK_KEY=migration-in-progress
