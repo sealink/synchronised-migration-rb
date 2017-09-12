@@ -70,7 +70,7 @@ class SynchronisedMigration::Main
 
   def redis_url
     sprintf(
-      'redis:://%s:%s/%s',
+      'redis://%s:%s/%s',
       RedisConfig.get[:host],
       RedisConfig.get[:port],
       RedisConfig.get[:db]
