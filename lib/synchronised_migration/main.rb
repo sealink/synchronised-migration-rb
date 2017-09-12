@@ -30,6 +30,7 @@ class SynchronisedMigration::Main
     return Result.new 'Halting the script because the previous migration failed.' if previous_failed?
     mark_failed
     migrate
+    return Result.new 'Migration failed.' if migration_failed?
     remove_fail_marker
     Result.new
   end
@@ -48,11 +49,15 @@ class SynchronisedMigration::Main
   end
 
   def migrate
-    Rake::Task[target_rake_task].invoke
+    Kernel.system target_command
   end
 
-  def target_rake_task
-    ENV.fetch 'SYNC_RAKE_TASK', 'launch:migrate'
+  def migration_failed?
+    not $?.success?
+  end
+
+  def target_command
+    ENV.fetch 'SYNCHRONISED_COMMAND', 'bin/launch/migrate'
   end
 
   def redis

@@ -9,7 +9,6 @@ describe SynchronisedMigration::Main do
     let(:redis) { double }
     let(:redlock) { double }
     let(:fail_marker_value) { nil }
-    let(:rake_task) { double }
 
     before do
       subject.instance.instance_variable_set :@redis, nil
@@ -23,10 +22,10 @@ describe SynchronisedMigration::Main do
       allow(Redlock::Client).to receive(:new).and_return(redlock)
       allow(redlock).to receive(:lock!) { |lock_key, timeout, &block| block.call }
 
-      stub_const 'Rake', Module.new
-      stub_const 'Rake::Task', { 'launch:migrate' => rake_task }
-
-      allow(rake_task).to receive(:invoke)
+      allow(Kernel).to receive(:system).and_wrap_original { |method, *args|
+        next if args == [ 'bin/launch/migrate' ]
+        method.call *args
+      }
 
       stub_const(
         'RedisConfig', double(
@@ -45,7 +44,7 @@ describe SynchronisedMigration::Main do
         expect(redlock).to have_received(:lock!)
         expect(redis).to have_received(:get).with('migration-failed')
         expect(redis).to have_received(:set).with('migration-failed', 1)
-        expect(rake_task).to have_received(:invoke)
+        expect(Kernel).to have_received(:system)
         expect(redis).to have_received(:del).with('migration-failed')
       end
     end
@@ -55,19 +54,17 @@ describe SynchronisedMigration::Main do
 
       it "doesn't execute the migration" do
         expect(result).not_to be_success
-        expect(rake_task).not_to have_received(:invoke)
+        expect(Kernel).not_to have_received(:system)
       end
     end
 
     context 'when the task crashed' do
       before do
-        allow(rake_task).to receive(:invoke) do
-          fail 'An error message'
-        end
+        allow_any_instance_of(Process::Status).to receive(:success?).and_return(false)
       end
 
       it 'marks the failure in Redis' do
-        expect { result }.to raise_error('An error message')
+        expect(result).not_to be_success
         expect(redis).to have_received(:set).with('migration-failed', 1)
         expect(redis).not_to have_received(:del)
       end
