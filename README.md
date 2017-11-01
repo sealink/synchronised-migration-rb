@@ -27,6 +27,7 @@ You may override these settings through environment variables.
 
 ```
 SYNCHRONISED_COMMAND=bin/launch/migrate
+WITH_CLEAN_BUNDLER_ENV=1 # Non-empty for true
 REDLOCK_TIMEOUT_MS=3600000
 REDLOCK_RETRY_DELAY_MS=200
 REDLOCK_LOCK_KEY=migration-in-progress
