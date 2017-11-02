@@ -49,7 +49,14 @@ class SynchronisedMigration::Main
   end
 
   def migrate
-    Kernel.system target_command
+    return Kernel.system target_command unless with_clean_env?
+    Bundler.with_clean_env do
+      Kernel.system target_command
+    end
+  end
+
+  def with_clean_env?
+    not ENV.fetch('WITH_CLEAN_BUNDLER_ENV', '').empty?
   end
 
   def migration_failed?
