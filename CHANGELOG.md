@@ -1,6 +1,6 @@
 # Synchronised Migration
 
-## Unreleased
+## 1.0.0
 
 * [DO-100] Allow nesting bundler exec
 
