@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    synchronised_migration (0.1.0)
+    synchronised_migration (1.0.1)
       redlock (~> 0.2)
 
 GEM
@@ -20,7 +20,7 @@ GEM
     pry-byebug (3.5.0)
       byebug (~> 9.1)
       pry (~> 0.10)
-    redis (3.3.3)
+    redis (3.3.5)
     redlock (0.2.0)
       redis (~> 3, >= 3.0.0)
     rspec (3.6.0)
@@ -55,4 +55,4 @@ DEPENDENCIES
   synchronised_migration!
 
 BUNDLED WITH
-   1.15.4
+   1.16.0
