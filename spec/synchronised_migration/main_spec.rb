@@ -27,7 +27,7 @@ describe SynchronisedMigration::Main do
         method.call *args
       }
 
-      allow(Bundler).to receive(:with_clean_env).and_call_original
+      allow(Bundler).to receive(:with_original_env).and_call_original
 
       stub_const(
         'RedisConfig', double(
@@ -47,7 +47,7 @@ describe SynchronisedMigration::Main do
         expect(redis).to have_received(:get).with('migration-failed')
         expect(redis).to have_received(:set).with('migration-failed', 1)
         expect(Kernel).to have_received(:system)
-        expect(Bundler).not_to have_received(:with_clean_env)
+        expect(Bundler).not_to have_received(:with_original_env)
         expect(redis).to have_received(:del).with('migration-failed')
       end
     end
@@ -61,7 +61,7 @@ describe SynchronisedMigration::Main do
       it 'executes it with a clean Bundler environment' do
         expect(result).to be_success
         expect(Kernel).to have_received(:system)
-        expect(Bundler).to have_received(:with_clean_env)
+        expect(Bundler).to have_received(:with_original_env)
       end
     end
 

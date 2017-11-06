@@ -1,5 +1,9 @@
 # Synchronised Migration
 
+## Unreleased
+
+* [DO-105] Use the `original` environment instead
+
 ## 1.0.1
 
 * [DO-100] Address the Travis issue

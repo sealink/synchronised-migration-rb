@@ -50,7 +50,7 @@ class SynchronisedMigration::Main
 
   def migrate
     return Kernel.system target_command unless with_clean_env?
-    Bundler.with_clean_env do
+    Bundler.with_original_env do
       Kernel.system target_command
     end
   end
