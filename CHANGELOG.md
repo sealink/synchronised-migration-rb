@@ -1,6 +1,6 @@
 # Synchronised Migration
 
-## Unreleased
+## 1.0.2
 
 * [DO-105] Use the `original` environment instead
 

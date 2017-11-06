@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    synchronised_migration (1.0.1)
+    synchronised_migration (1.0.2)
       redlock (~> 0.2)
 
 GEM
