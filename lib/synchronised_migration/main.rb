@@ -83,9 +83,9 @@ class SynchronisedMigration::Main
   def redis_url
     sprintf(
       'redis://%s:%s/%s',
-      SynchronisedMigration.redis_config[:host],
-      SynchronisedMigration.redis_config[:port],
-      SynchronisedMigration.redis_config[:db]
+      SynchronisedMigration.redis_config.host,
+      SynchronisedMigration.redis_config.port,
+      SynchronisedMigration.redis_config.db
     )
   end
 

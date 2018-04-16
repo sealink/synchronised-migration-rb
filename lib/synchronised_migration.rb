@@ -1,10 +1,21 @@
 module SynchronisedMigration
-  def self.redis_config=(config)
-    @redis_config = config
+  class << self
+    attr_accessor :redis_config
   end
 
-  def self.redis_config
-    @redis_config
+  def self.configure
+    self.redis_config ||= Configuration.new
+    yield(redis_config)
+  end
+
+  class Configuration
+    attr_accessor :host, :port, :db
+
+    def initialize
+      @host = ''
+      @port = 0
+      @db   = 0
+    end
   end
 end
 
