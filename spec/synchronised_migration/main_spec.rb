@@ -29,15 +29,11 @@ describe SynchronisedMigration::Main do
 
       allow(Bundler).to receive(:with_original_env).and_call_original
 
-      stub_const(
-        'RedisConfig', double(
-          get: {
-            host: 'example.com',
-            port: 6379,
-            db: 0
-          }
-        )
-      )
+      SynchronisedMigration.redis_config = {
+                                              host: 'example.com',
+                                              port: 6379,
+                                              db: 0
+                                            }
     end
 
     context 'in the happy path' do
