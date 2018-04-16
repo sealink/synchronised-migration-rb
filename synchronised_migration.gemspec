@@ -5,7 +5,7 @@ require 'synchronised_migration/version'
 Gem::Specification.new do |spec|
   spec.name          = 'synchronised_migration'
   spec.version       = SynchronisedMigration::VERSION
-  spec.authors       = ['Alvin Yim']
+  spec.authors       = ['Alvin Yim', 'Stefan Cooper']
   spec.email         = 'support@travellink.com.au'
   spec.description   = 'Use Redis to record the data migration status'
   spec.summary       = 'For deploying to multiple instances simultaneously'
