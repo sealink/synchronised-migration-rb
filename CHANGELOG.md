@@ -1,6 +1,6 @@
 # Synchronised Migration
 
-## 1.1.0
+## 2.0.0
 
 * [DO-168] Removed requirement for defining RedisConfig, now set on
   SynchronisedMigration module
