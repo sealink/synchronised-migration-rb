@@ -15,13 +15,18 @@ Docker](https://github.com/sealink/craft-docker) project.
 
 ## Usage
 
-Class `RedisConfig` needs to be provided as follow.
+Module `SynchronisedMigration` needs to be configured as below.
 
 ```
-RedisConfig.get[:host] # example.com
-RedisConfig.get[:port] # 6379
-RedisConfig.get[:db] # 0
+  SynchronisedMigration.configure do |config|
+    config.host = 'example.com'
+    config.port = 6379
+    config.db = 0
+  end
 ```
+
+Configuration can be called by using
+```SynchronisedMigration.redis_config.host``` or similar.
 
 You may override these settings through environment variables.
 
