@@ -1,5 +1,9 @@
 # Synchronised Migration
 
+## Unreleased
+
+* [TT-5827] Add "success key" when REDLOCK_VERSION_SUFFIX is set, preventing repeat runs
+
 ## 2.0.0
 
 * [DO-168] Removed requirement for defining RedisConfig, now set on

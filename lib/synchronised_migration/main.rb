@@ -15,10 +15,17 @@ class SynchronisedMigration::Main
   end
 
   def call
-    lock_and_execute
+    done_or_execute
   end
 
   private
+
+  def done_or_execute
+    return Result.ok if previous_success?
+    result = lock_and_execute
+    mark_successful if result.success?
+    result
+  end
 
   def lock_and_execute
     redlock.lock! lock_key, timeout do
@@ -27,12 +34,24 @@ class SynchronisedMigration::Main
   end
 
   def execute
-    return Result.new 'Halting the script because the previous migration failed.' if previous_failed?
+    return Result.fail 'Halting the script because the previous migration failed.' if previous_failed?
     mark_failed
     migrate
-    return Result.new 'Migration failed.' if migration_failed?
+    return Result.fail 'Migration failed.' if migration_failed?
     remove_fail_marker
-    Result.new
+    return Result.ok
+  end
+
+  def previous_success?
+    return false if !success_key
+    value = redis.get(success_key)
+    not value.nil? and not value.empty?
+  end
+
+  def mark_successful
+    if success_key
+      redis.set success_key, Time.now.to_i, ttl: 30.days
+    end
   end
 
   def previous_failed?
@@ -41,7 +60,7 @@ class SynchronisedMigration::Main
   end
 
   def mark_failed
-    redis.set fail_key, 1
+    redis.set fail_key, Time.now.to_i, ttl: 1.hour
   end
 
   def remove_fail_marker
@@ -94,7 +113,7 @@ class SynchronisedMigration::Main
   end
 
   def retry_delay
-    ENV.fetch('REDLOCK_RETRY_DELAY_MS', 200).to_i
+    ENV.fetch('REDLOCK_RETRY_DELAY_MS', 3000).to_i
   end
 
   def retry_count
@@ -106,6 +125,16 @@ class SynchronisedMigration::Main
   end
 
   def fail_key
-    ENV.fetch 'REDLOCK_FAIL_KEY', 'migration-failed'
+    ENV.fetch 'REDLOCK_FAIL_KEY', 'migration-failed' + version_suffix
+  end
+
+  def success_key
+    return false if version_suffix.empty?
+    'migration-success' + version_suffix
+  end
+
+  def version_suffix
+    suffix = ENV.fetch 'REDLOCK_VERSION_SUFFIX', false
+    suffix ? '-' + suffix : ''
   end
 end
