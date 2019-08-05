@@ -21,10 +21,8 @@ class SynchronisedMigration::Main
   private
 
   def done_or_execute
-    return Result.ok if previous_success?
-    result = lock_and_execute
-    mark_successful if result.success?
-    result
+    return Result.ok if migration_already_completed?
+    lock_and_execute
   end
 
   def lock_and_execute
@@ -38,11 +36,12 @@ class SynchronisedMigration::Main
     mark_failed
     migrate
     return Result.fail 'Migration failed.' if migration_failed?
+    mark_successful
     remove_fail_marker
     return Result.ok
   end
 
-  def previous_success?
+  def migration_already_completed?
     return false if !success_key
     value = redis.get(success_key)
     not value.nil? and not value.empty?
