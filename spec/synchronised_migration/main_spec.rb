@@ -9,18 +9,25 @@ describe SynchronisedMigration::Main do
     let(:redis) { double }
     let(:redlock) { double }
     let(:fail_marker_value) { nil }
+    let(:success_marker_value) { nil }
+    let(:set_version_suffix) { ENV['REDLOCK_VERSION_SUFFIX'] = 'bork' }
+    let(:time_value) { double(to_i: 123456789) }
 
     before do
+      set_version_suffix
+
       subject.instance.instance_variable_set :@redis, nil
       subject.instance.instance_variable_set :@redlock, nil
 
       allow(Redis).to receive(:new).and_return(redis)
-      allow(redis).to receive(:get).and_return(fail_marker_value)
+      allow(redis).to receive(:get).and_return(success_marker_value, fail_marker_value)
       allow(redis).to receive(:set)
       allow(redis).to receive(:del)
 
       allow(Redlock::Client).to receive(:new).and_return(redlock)
       allow(redlock).to receive(:lock!) { |lock_key, timeout, &block| block.call }
+
+      allow(Time).to receive(:now).and_return(time_value)
 
       allow(Kernel).to receive(:system).and_wrap_original { |method, *args|
         next if args == [ 'bin/launch/migrate' ]
@@ -40,11 +47,20 @@ describe SynchronisedMigration::Main do
       it 'executes the migration successfully' do
         expect(result).to be_success
         expect(redlock).to have_received(:lock!)
-        expect(redis).to have_received(:get).with('migration-failed')
-        expect(redis).to have_received(:set).with('migration-failed', 1)
+        expect(redis).to have_received(:get).with('migration-failed-bork')
+        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, ttl: 3600)
+        expect(redis).to have_received(:set).with('migration-success-bork', 123456789, ttl: 3600*24*30)
         expect(Kernel).to have_received(:system)
         expect(Bundler).not_to have_received(:with_original_env)
-        expect(redis).to have_received(:del).with('migration-failed')
+        expect(redis).to have_received(:del).with('migration-failed-bork')
+      end
+
+      context 'and migration completed previously' do
+        let(:success_marker_value) { '1' }
+        it 'contines without executing' do
+          expect(result).to be_success
+          expect(redlock).not_to have_received(:lock!)
+        end
       end
     end
 
@@ -77,8 +93,36 @@ describe SynchronisedMigration::Main do
 
       it 'marks the failure in Redis' do
         expect(result).not_to be_success
-        expect(redis).to have_received(:set).with('migration-failed', 1)
+        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, ttl: 3600)
         expect(redis).not_to have_received(:del)
+      end
+    end
+
+    context 'without version suffix' do
+      let(:set_version_suffix) { ENV.delete 'REDLOCK_VERSION_SUFFIX' }
+
+      context 'in the happy path' do
+        it 'executes the migration successfully' do
+          expect(result).to be_success
+          expect(redlock).to have_received(:lock!)
+          expect(redis).to have_received(:get).with('migration-failed')
+          expect(redis).to have_received(:set).with('migration-failed', 123456789, ttl: 3600)
+          expect(Kernel).to have_received(:system)
+          expect(Bundler).not_to have_received(:with_original_env)
+          expect(redis).to have_received(:del).with('migration-failed')
+        end
+      end
+
+      context 'when the task crashed' do
+        before do
+          allow_any_instance_of(Process::Status).to receive(:success?).and_return(false)
+        end
+
+        it 'marks the failure in Redis' do
+          expect(result).not_to be_success
+          expect(redis).to have_received(:set).with('migration-failed', 123456789, ttl: 3600)
+          expect(redis).not_to have_received(:del)
+        end
       end
     end
   end

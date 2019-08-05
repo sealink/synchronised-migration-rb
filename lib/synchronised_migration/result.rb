@@ -10,4 +10,12 @@ class SynchronisedMigration::Result
   def success?
     error.nil?
   end
+
+  def self.ok
+    self.new
+  end
+
+  def self.fail(error)
+    self.new error
+  end
 end

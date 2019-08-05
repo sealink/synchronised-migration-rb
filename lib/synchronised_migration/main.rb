@@ -15,10 +15,15 @@ class SynchronisedMigration::Main
   end
 
   def call
-    lock_and_execute
+    done_or_execute
   end
 
   private
+
+  def done_or_execute
+    return Result.ok if migration_already_completed?
+    lock_and_execute
+  end
 
   def lock_and_execute
     redlock.lock! lock_key, timeout do
@@ -27,12 +32,25 @@ class SynchronisedMigration::Main
   end
 
   def execute
-    return Result.new 'Halting the script because the previous migration failed.' if previous_failed?
+    return Result.fail 'Halting the script because the previous migration failed.' if previous_failed?
     mark_failed
     migrate
-    return Result.new 'Migration failed.' if migration_failed?
+    return Result.fail 'Migration failed.' if migration_failed?
+    mark_successful
     remove_fail_marker
-    Result.new
+    return Result.ok
+  end
+
+  def migration_already_completed?
+    return false if !success_key
+    value = redis.get(success_key)
+    not value.nil? and not value.empty?
+  end
+
+  def mark_successful
+    if success_key
+      redis.set success_key, timestamp, ttl: 3600*24*30
+    end
   end
 
   def previous_failed?
@@ -41,7 +59,7 @@ class SynchronisedMigration::Main
   end
 
   def mark_failed
-    redis.set fail_key, 1
+    redis.set fail_key, timestamp, ttl: 3600
   end
 
   def remove_fail_marker
@@ -89,12 +107,16 @@ class SynchronisedMigration::Main
     )
   end
 
+  def timestamp
+    Time.now.to_i
+  end
+
   def timeout
     ENV.fetch('REDLOCK_TIMEOUT_MS', 3_600_000).to_i
   end
 
   def retry_delay
-    ENV.fetch('REDLOCK_RETRY_DELAY_MS', 200).to_i
+    ENV.fetch('REDLOCK_RETRY_DELAY_MS', 3000).to_i
   end
 
   def retry_count
@@ -106,6 +128,16 @@ class SynchronisedMigration::Main
   end
 
   def fail_key
-    ENV.fetch 'REDLOCK_FAIL_KEY', 'migration-failed'
+    ENV.fetch 'REDLOCK_FAIL_KEY', 'migration-failed' + version_suffix
+  end
+
+  def success_key
+    return false if version_suffix.empty?
+    'migration-success' + version_suffix
+  end
+
+  def version_suffix
+    suffix = ENV.fetch 'REDLOCK_VERSION_SUFFIX', false
+    suffix ? '-' + suffix : ''
   end
 end
