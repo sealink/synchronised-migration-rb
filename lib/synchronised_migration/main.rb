@@ -50,7 +50,7 @@ class SynchronisedMigration::Main
 
   def mark_successful
     if success_key
-      redis.set success_key, Time.now.to_i, ttl: 30.days
+      redis.set success_key, timestamp, ttl: 3600*24*30
     end
   end
 
@@ -60,7 +60,7 @@ class SynchronisedMigration::Main
   end
 
   def mark_failed
-    redis.set fail_key, Time.now.to_i, ttl: 1.hour
+    redis.set fail_key, timestamp, ttl: 3600
   end
 
   def remove_fail_marker
@@ -106,6 +106,10 @@ class SynchronisedMigration::Main
       SynchronisedMigration.redis_config.port,
       SynchronisedMigration.redis_config.db
     )
+  end
+
+  def timestamp
+    Time.now.to_i
   end
 
   def timeout
