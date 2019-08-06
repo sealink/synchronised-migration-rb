@@ -1,6 +1,6 @@
 # Synchronised Migration
 
-## Unreleased
+## 2.1.0
 
 * [TT-5827] Add "success key" when REDLOCK_VERSION_SUFFIX is set, preventing repeat runs
 * [TT-5830] Add rake and Rakefile for 'rake release'
