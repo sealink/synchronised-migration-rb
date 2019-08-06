@@ -20,6 +20,7 @@ GEM
     pry-byebug (3.5.0)
       byebug (~> 9.1)
       pry (~> 0.10)
+    rake (12.3.3)
     redis (4.0.1)
     redlock (0.2.2)
       redis (>= 3.0.0, < 5.0)
@@ -50,9 +51,10 @@ PLATFORMS
 
 DEPENDENCIES
   pry-byebug (~> 3.5)
+  rake
   rspec (~> 3.6)
   simplecov-rcov (~> 0.2)
   synchronised_migration!
 
 BUNDLED WITH
-   1.16.1
+   1.17.2

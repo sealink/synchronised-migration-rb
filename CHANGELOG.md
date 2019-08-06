@@ -3,6 +3,7 @@
 ## Unreleased
 
 * [TT-5827] Add "success key" when REDLOCK_VERSION_SUFFIX is set, preventing repeat runs
+* [TT-5830] Add rake and Rakefile for 'rake release'
 
 ## 2.0.0
 
