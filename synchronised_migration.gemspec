@@ -16,8 +16,9 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
-  spec.add_dependency 'redlock', '~> 0.2'
-  spec.add_development_dependency 'simplecov-rcov', '~> 0.2'
-  spec.add_development_dependency 'rspec', '~> 3.6'
-  spec.add_development_dependency 'pry-byebug', '~> 3.5'
+  spec.add_dependency 'redlock', '>= 0.2'
+  spec.add_development_dependency 'rake'
+  spec.add_development_dependency 'simplecov-rcov', '>= 0.2'
+  spec.add_development_dependency 'rspec', '>= 3.6'
+  spec.add_development_dependency 'pry-byebug', '>= 3.5'
 end
