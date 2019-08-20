@@ -28,8 +28,14 @@ describe SynchronisedMigration::Main do
         case key
         when "migration-failed-#{version_suffix}"
           fail_marker_value
+        when "migration-failed"
+          fail_marker_value
         when "migration-success-#{version_suffix}"
           success_marker_value
+        when "migration-success"
+          success_marker_value
+        else
+          raise "invalid key for redis get: #{key}"
         end
       }
       allow(redis).to receive(:set)
