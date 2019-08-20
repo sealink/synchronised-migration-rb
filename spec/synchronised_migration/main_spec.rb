@@ -10,7 +10,8 @@ describe SynchronisedMigration::Main do
     let(:redlock) { double }
     let(:fail_marker_value) { nil }
     let(:success_marker_value) { nil }
-    let(:set_version_suffix) { ENV['REDLOCK_VERSION_SUFFIX'] = 'bork' }
+    let(:version_suffix) { 'bork' }
+    let(:set_version_suffix) { ENV['REDLOCK_VERSION_SUFFIX'] = version_suffix }
     let(:time_value) { double(to_i: 123456789) }
 
     before do
@@ -19,8 +20,18 @@ describe SynchronisedMigration::Main do
       subject.instance.instance_variable_set :@redis, nil
       subject.instance.instance_variable_set :@redlock, nil
 
+      allow(subject.instance).to receive(:execute).and_call_original
+      allow(subject.instance).to receive(:migrate).and_call_original
+
       allow(Redis).to receive(:new).and_return(redis)
-      allow(redis).to receive(:get).and_return(success_marker_value, fail_marker_value)
+      allow(redis).to receive(:get) { |key|
+        case key
+        when "migration-failed-#{version_suffix}"
+          fail_marker_value
+        when "migration-success-#{version_suffix}"
+          success_marker_value
+        end
+      }
       allow(redis).to receive(:set)
       allow(redis).to receive(:del)
 
@@ -60,6 +71,24 @@ describe SynchronisedMigration::Main do
         it 'contines without executing' do
           expect(result).to be_success
           expect(redlock).not_to have_received(:lock!)
+        end
+      end
+
+      context 'executing in lock waiter' do
+        let(:result2) { subject.call }
+
+        before do
+          # Note: bypasses the first success flag check so it can enter lock.
+          expect(result).to be_success
+          allow(redis).to receive(:get).and_return(nil, '1')
+        end
+
+        it 'early exits and does not execute again', :aggregate_failures do
+          expect(result2).to be_success
+          expect(redlock).to have_received(:lock!).exactly(2).times
+          expect(Kernel).to have_received(:system).exactly(1).times
+          expect(subject.instance).to have_received(:execute).exactly(2).times
+          expect(subject.instance).to have_received(:migrate).exactly(1).times
         end
       end
     end
