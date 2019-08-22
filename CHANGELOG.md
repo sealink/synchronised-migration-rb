@@ -1,5 +1,9 @@
 # Synchronised Migration
 
+## Unreleased
+
+* [TT-5896] Early exit from migration inside lock if already completed
+
 ## 2.1.0
 
 * [TT-5827] Add "success key" when REDLOCK_VERSION_SUFFIX is set, preventing repeat runs

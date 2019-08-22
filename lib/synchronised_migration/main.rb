@@ -32,10 +32,11 @@ class SynchronisedMigration::Main
   end
 
   def execute
+    return Result.ok if migration_already_completed?
     return Result.fail 'Halting the script because the previous migration failed.' if previous_failed?
     mark_failed
-    migrate
-    return Result.fail 'Migration failed.' if migration_failed?
+    migration_success = migrate
+    return Result.fail 'Migration failed.' unless migration_success
     mark_successful
     remove_fail_marker
     return Result.ok
@@ -67,18 +68,18 @@ class SynchronisedMigration::Main
   end
 
   def migrate
-    return Kernel.system target_command unless with_clean_env?
-    Bundler.with_original_env do
-      Kernel.system target_command
+    if with_clean_env?
+      Bundler.with_original_env do
+        Kernel.system target_command
+      end
+    else
+       Kernel.system target_command
     end
+    $?.success?
   end
 
   def with_clean_env?
     not ENV.fetch('WITH_CLEAN_BUNDLER_ENV', '').empty?
-  end
-
-  def migration_failed?
-    not $?.success?
   end
 
   def target_command
