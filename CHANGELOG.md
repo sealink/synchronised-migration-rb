@@ -1,6 +1,6 @@
 # Synchronised Migration
 
-## Unreleased
+## 2.1.1
 
 * [TT-5896] Early exit from migration inside lock if already completed
 
