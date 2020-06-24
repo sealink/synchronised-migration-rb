@@ -65,8 +65,8 @@ describe SynchronisedMigration::Main do
         expect(result).to be_success
         expect(redlock).to have_received(:lock!)
         expect(redis).to have_received(:get).with('migration-failed-bork')
-        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, px: 3600)
-        expect(redis).to have_received(:set).with('migration-success-bork', 123456789, px: 3600*24*30)
+        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, ex: 3600)
+        expect(redis).to have_received(:set).with('migration-success-bork', 123456789, ex: 3600*24*30)
         expect(Kernel).to have_received(:system)
         expect(Bundler).not_to have_received(:with_original_env)
         expect(redis).to have_received(:del).with('migration-failed-bork')
@@ -128,7 +128,7 @@ describe SynchronisedMigration::Main do
 
       it 'marks the failure in Redis' do
         expect(result).not_to be_success
-        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, px: 3600)
+        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, ex: 3600)
         expect(redis).not_to have_received(:del)
       end
     end
@@ -141,7 +141,7 @@ describe SynchronisedMigration::Main do
           expect(result).to be_success
           expect(redlock).to have_received(:lock!)
           expect(redis).to have_received(:get).with('migration-failed')
-          expect(redis).to have_received(:set).with('migration-failed', 123456789, px: 3600)
+          expect(redis).to have_received(:set).with('migration-failed', 123456789, ex: 3600)
           expect(Kernel).to have_received(:system)
           expect(Bundler).not_to have_received(:with_original_env)
           expect(redis).to have_received(:del).with('migration-failed')
@@ -155,7 +155,7 @@ describe SynchronisedMigration::Main do
 
         it 'marks the failure in Redis' do
           expect(result).not_to be_success
-          expect(redis).to have_received(:set).with('migration-failed', 123456789, px: 3600)
+          expect(redis).to have_received(:set).with('migration-failed', 123456789, ex: 3600)
           expect(redis).not_to have_received(:del)
         end
       end

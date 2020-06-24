@@ -50,7 +50,7 @@ class SynchronisedMigration::Main
 
   def mark_successful
     if success_key
-      redis.set success_key, timestamp, px: 3600*24*30
+      redis.set success_key, timestamp, ex: 3600*24*30
     end
   end
 
@@ -60,7 +60,7 @@ class SynchronisedMigration::Main
   end
 
   def mark_failed
-    redis.set fail_key, timestamp, px: 3600
+    redis.set fail_key, timestamp, ex: 3600
   end
 
   def remove_fail_marker
