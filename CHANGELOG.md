@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-* [TT-7511] Use the correct `px` option for key value expiry times intstead of `ttl`
+* [TT-7511] Use the correct `ex` option for key value expiry times intstead of `ttl`
 
 ## 2.1.1
 
