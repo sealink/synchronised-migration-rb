@@ -1,8 +1,8 @@
 # Synchronised Migration
 
-## Unreleased
+## 2.1.2
 
-* [TT-7511] Use the correct `ex` option for key value expiry times intstead of `ttl`
+* [TT-7511] Use the correct `ex` option for key value expiry times instead of `ttl`
 
 ## 2.1.1
 
