@@ -123,7 +123,7 @@ describe SynchronisedMigration::Main do
 
     context 'when the task crashed' do
       it 'marks the failure in Redis' do
-        fork { exit 1 } # Change to whatever code you need
+        fork { exit 1 }
         Process.wait
 
         expect(result).not_to be_success
@@ -137,7 +137,7 @@ describe SynchronisedMigration::Main do
 
       context 'in the happy path' do
         it 'executes the migration successfully' do
-          fork { exit 0 } # Change to whatever code you need
+          fork { exit 0 }
           Process.wait
 
           expect(result).to be_success
@@ -152,7 +152,7 @@ describe SynchronisedMigration::Main do
 
       context 'when the task crashed' do
         it 'marks the failure in Redis' do
-          fork { exit 1 } # Change to whatever code you need
+          fork { exit 1 }
           Process.wait
 
           expect(result).not_to be_success
