@@ -122,11 +122,10 @@ describe SynchronisedMigration::Main do
     end
 
     context 'when the task crashed' do
-      before do
-        allow_any_instance_of(Process::Status).to receive(:success?).and_return(false)
-      end
-
       it 'marks the failure in Redis' do
+        fork { exit 1 } # Change to whatever code you need
+        Process.wait
+
         expect(result).not_to be_success
         expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, ex: 3600)
         expect(redis).not_to have_received(:del)
@@ -138,6 +137,9 @@ describe SynchronisedMigration::Main do
 
       context 'in the happy path' do
         it 'executes the migration successfully' do
+          fork { exit 0 } # Change to whatever code you need
+          Process.wait
+
           expect(result).to be_success
           expect(redlock).to have_received(:lock!)
           expect(redis).to have_received(:get).with('migration-failed')
@@ -149,11 +151,10 @@ describe SynchronisedMigration::Main do
       end
 
       context 'when the task crashed' do
-        before do
-          allow_any_instance_of(Process::Status).to receive(:success?).and_return(false)
-        end
-
         it 'marks the failure in Redis' do
+          fork { exit 1 } # Change to whatever code you need
+          Process.wait
+
           expect(result).not_to be_success
           expect(redis).to have_received(:set).with('migration-failed', 123456789, ex: 3600)
           expect(redis).not_to have_received(:del)

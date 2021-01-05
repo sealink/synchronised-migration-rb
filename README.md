@@ -1,6 +1,7 @@
 # Synchronised Migration
 
-[![Build Status](https://travis-ci.org/sealink/synchronised-migration-rb.svg?branch=master)](https://travis-ci.org/sealink/synchronised-migration-rb)
+[![Gem Version](https://badge.fury.io/rb/synchronised_migration.svg)](http://badge.fury.io/rb/synchronised_migration)
+[![Build Status](https://github.com/sealink/synchronised-migration-rb/workflows/Build%20and%20Test/badge.svg?branch=master)](https://github.com/sealink/synchronised-migration-rb/actions)
 
 This gem makes it possible to deploy multiple instances with data migration
 simultaneously.  It uses Redis to ensure that there will be only one migration
@@ -17,7 +18,7 @@ Docker](https://github.com/sealink/craft-docker) project.
 
 Module `SynchronisedMigration` needs to be configured as below.
 
-```
+```ruby
   SynchronisedMigration.configure do |config|
     config.host = 'example.com'
     config.port = 6379
@@ -45,6 +46,14 @@ Run this before you launch the application during deployment.
 $ rake synchronised_migrate:execute
 ```
 
-## Testing
+## Release
 
-Please refer to `.travis.yml` for testing.
+To publish a new version of this gem the following steps must be taken.
+
+* Update the version in the following files
+  ```
+    CHANGELOG.md
+    lib/synchronised_migration/version.rb
+  ````
+* Create a tag using the format v0.1.0
+* Follow build progress in GitHub actions
