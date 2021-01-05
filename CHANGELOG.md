@@ -1,5 +1,9 @@
 # Synchronised Migration
 
+## Unreleased
+
+- [TT-8617] Update to build with github actions / ruby 3.0
+
 ## 2.1.2
 
 * [TT-7511] Use the correct `ex` option for key value expiry times instead of `ttl`
