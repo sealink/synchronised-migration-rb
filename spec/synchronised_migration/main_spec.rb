@@ -1,164 +1,202 @@
-require 'spec_helper'
-require 'synchronised_migration/main'
+require "spec_helper"
 
 describe SynchronisedMigration::Main do
-  subject { described_class }
-  let(:result) { subject.call }
+  let(:redis_uri) { "redis://127.0.0.1:6379/10" }
+  let(:redis) { Redis.new(url: redis_uri) }
 
-  context 'when the prerequisites are meet' do
-    let(:redis) { double }
-    let(:redlock) { double }
-    let(:fail_marker_value) { nil }
-    let(:success_marker_value) { nil }
-    let(:version_suffix) { 'bork' }
-    let(:set_version_suffix) { ENV['REDLOCK_VERSION_SUFFIX'] = version_suffix }
-    let(:time_value) { double(to_i: 123456789) }
+  let(:command) { "spec/support/success-script" }
+  let(:config_opts) {
+    {
+      redis_uri: redis_uri,
+      command: command,
+      application: "test",
+      version: "1.2.3"
+    }
+  }
+
+  let(:configuration) { SynchronisedMigration::Configuration.new(config_opts) }
+
+  before(:each) do
+    redis.flushdb
+  end
+
+  context "when succesful migration" do
+    subject { SynchronisedMigration::Main.new(configuration).call }
 
     before do
-      set_version_suffix
+      Timecop.freeze(Time.local(1990))
+    end
 
-      subject.instance.instance_variable_set :@redis, nil
-      subject.instance.instance_variable_set :@redlock, nil
+    after do
+      Timecop.return
+    end
 
-      allow(subject.instance).to receive(:execute).and_call_original
-      allow(subject.instance).to receive(:migrate).and_call_original
+    context "when executed" do
+      it "returns a succesful result" do
+        expect(subject).to be_succesful
+      end
 
-      allow(Redis).to receive(:new).and_return(redis)
-      allow(redis).to receive(:get) { |key|
-        case key
-        when "migration-failed-#{version_suffix}"
-          fail_marker_value
-        when "migration-failed"
-          fail_marker_value
-        when "migration-success-#{version_suffix}"
-          success_marker_value
-        when "migration-success"
-          success_marker_value
-        else
-          raise "invalid key for redis get: #{key}"
-        end
-      }
-      allow(redis).to receive(:set)
-      allow(redis).to receive(:del)
-
-      allow(Redlock::Client).to receive(:new).and_return(redlock)
-      allow(redlock).to receive(:lock!) { |lock_key, timeout, &block| block.call }
-
-      allow(Time).to receive(:now).and_return(time_value)
-
-      allow(Kernel).to receive(:system).and_wrap_original { |method, *args|
-        next if args == [ 'bin/launch/migrate' ]
-        method.call *args
-      }
-
-      allow(Bundler).to receive(:with_original_env).and_call_original
-
-      SynchronisedMigration.configure do |config|
-        config.host = 'example.com'
-        config.port = 6379
-        config.db = 0
+      it "should have the correct status code" do
+        expect(subject).to have_attributes(code: 0)
       end
     end
 
-    context 'in the happy path' do
-      it 'executes the migration successfully' do
-        expect(result).to be_success
-        expect(redlock).to have_received(:lock!)
-        expect(redis).to have_received(:get).with('migration-failed-bork')
-        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, ex: 3600)
-        expect(redis).to have_received(:set).with('migration-success-bork', 123456789, ex: 3600*24*30)
-        expect(Kernel).to have_received(:system)
-        expect(Bundler).not_to have_received(:with_original_env)
-        expect(redis).to have_received(:del).with('migration-failed-bork')
-      end
+    context "when inspecting the redis cache" do
+      subject(:success_key) { JSON.parse(redis.get(configuration.success_key)) }
+      subject(:lock_key) { redis.exists?(configuration.lock_key) }
+      subject(:failure_key) { redis.exists?(configuration.fail_key) }
 
-      context 'and migration completed previously' do
-        let(:success_marker_value) { '1' }
-        it 'contines without executing' do
-          expect(result).to be_success
-          expect(redlock).not_to have_received(:lock!)
-        end
-      end
-
-      context 'executing in lock waiter' do
-        let(:result2) { subject.call }
-
-        before do
-          # Note: bypasses the first success flag check so it can enter lock.
-          expect(result).to be_success
-          allow(redis).to receive(:get).and_return(nil, '1')
-        end
-
-        it 'early exits and does not execute again', :aggregate_failures do
-          expect(result2).to be_success
-          expect(redlock).to have_received(:lock!).exactly(2).times
-          expect(Kernel).to have_received(:system).exactly(1).times
-          expect(subject.instance).to have_received(:execute).exactly(2).times
-          expect(subject.instance).to have_received(:migrate).exactly(1).times
-        end
-      end
-    end
-
-    context 'when require a clean Bundler environment' do
       before do
-        allow(ENV).to receive(:fetch).and_call_original
-        allow(ENV).to receive(:fetch).with('WITH_CLEAN_BUNDLER_ENV', '').and_return('1')
+        SynchronisedMigration::Main.new(configuration).call
       end
 
-      it 'executes it with a clean Bundler environment' do
-        expect(result).to be_success
-        expect(Kernel).to have_received(:system)
-        expect(Bundler).to have_received(:with_original_env)
+      it "write success key" do
+        expect(success_key).to eq(
+          {
+            "application" => "test",
+            "version" => "1.2.3",
+            "timestamp" => 631114200,
+            "command" => "spec/support/success-script"
+          }
+        )
+      end
+
+      it "failure key is not present" do
+        expect(failure_key).to eq false
+      end
+
+      it "lock key is not present" do
+        expect(lock_key).to eq false
+      end
+    end
+  end
+
+  context "when re-running a succesful migration" do
+    subject { SynchronisedMigration::Main.new(configuration).call }
+
+    before do
+      SynchronisedMigration::Main.new(configuration).call
+    end
+
+    context "when executed" do
+      it "returns a succesful result" do
+        expect(subject).to be_succesful
+      end
+
+      it "should have the correct status code" do
+        expect(subject).to have_attributes(code: 1)
       end
     end
 
-    context 'after a deployment failed previously' do
-      let(:fail_marker_value) { '1' }
+    context "when inspecting the redis cache" do
+      before do
+        SynchronisedMigration::Main.new(configuration).call
+      end
 
-      it "doesn't execute the migration" do
-        expect(result).not_to be_success
-        expect(Kernel).not_to have_received(:system)
+      subject(:success_key) { redis.exists?(configuration.success_key) }
+      subject(:lock_key) { redis.exists?(configuration.lock_key) }
+      subject(:failure_key) { redis.exists?(configuration.fail_key) }
+
+      it "failure key is not present" do
+        expect(failure_key).to eq false
+      end
+
+      it "lock key is not present" do
+        expect(lock_key).to eq false
+      end
+
+      it "success key is present" do
+        expect(success_key).to eq true
+      end
+    end
+  end
+
+  context "when migration previously failed" do
+    subject { SynchronisedMigration::Main.new(configuration).call }
+
+    before do
+      redis.flushdb
+      redis.set(configuration.fail_key, "")
+    end
+
+    context "when executed" do
+      it "returns a failure result" do
+        expect(subject).to be_failure
+      end
+
+      it "should have the correct status code" do
+        expect(subject).to have_attributes(code: 2)
+      end
+
+      it "should have the correct error msg" do
+        expect(subject).to have_attributes(error_msg: "Halting the script because the previous migration failed.")
       end
     end
 
-    context 'when the task crashed' do
-      it 'marks the failure in Redis' do
-        fork { exit 1 }
-        Process.wait
+    context "when inspecting the redis cache" do
+      before do
+        SynchronisedMigration::Main.new(configuration).call
+      end
 
-        expect(result).not_to be_success
-        expect(redis).to have_received(:set).with('migration-failed-bork', 123456789, ex: 3600)
-        expect(redis).not_to have_received(:del)
+      subject(:success_key) { redis.exists?(configuration.success_key) }
+      subject(:lock_key) { redis.exists?(configuration.lock_key) }
+      subject(:failure_key) { redis.exists?(configuration.fail_key) }
+
+      it "failure key is present" do
+        expect(failure_key).to eq true
+      end
+
+      it "lock key is not present" do
+        expect(lock_key).to eq false
+      end
+
+      it "success key is not present" do
+        expect(success_key).to eq false
+      end
+    end
+  end
+
+  context "when migration command fails" do
+    let(:command) { "spec/support/failure-script" }
+    subject { SynchronisedMigration::Main.new(configuration).call }
+
+    before do
+      redis.flushdb
+    end
+
+    context "when executed" do
+      it "returns a failure result" do
+        expect(subject).to be_failure
+      end
+
+      it "should have the correct status code" do
+        expect(subject).to have_attributes(code: 3)
+      end
+
+      it "should have the correct error msg" do
+        expect(subject).to have_attributes(error_msg: "Migration command failed.")
       end
     end
 
-    context 'without version suffix' do
-      let(:set_version_suffix) { ENV.delete 'REDLOCK_VERSION_SUFFIX' }
-
-      context 'in the happy path' do
-        it 'executes the migration successfully' do
-          fork { exit 0 }
-          Process.wait
-
-          expect(result).to be_success
-          expect(redlock).to have_received(:lock!)
-          expect(redis).to have_received(:get).with('migration-failed')
-          expect(redis).to have_received(:set).with('migration-failed', 123456789, ex: 3600)
-          expect(Kernel).to have_received(:system)
-          expect(Bundler).not_to have_received(:with_original_env)
-          expect(redis).to have_received(:del).with('migration-failed')
-        end
+    context "when inspecting the redis cache" do
+      before do
+        SynchronisedMigration::Main.new(configuration).call
       end
 
-      context 'when the task crashed' do
-        it 'marks the failure in Redis' do
-          fork { exit 1 }
-          Process.wait
+      subject(:success_key) { redis.exists?(configuration.success_key) }
+      subject(:lock_key) { redis.exists?(configuration.lock_key) }
+      subject(:failure_key) { redis.exists?(configuration.fail_key) }
 
-          expect(result).not_to be_success
-          expect(redis).to have_received(:set).with('migration-failed', 123456789, ex: 3600)
-          expect(redis).not_to have_received(:del)
-        end
+      it "failure key is present" do
+        expect(failure_key).to eq true
+      end
+
+      it "lock key is not present" do
+        expect(lock_key).to eq false
+      end
+
+      it "success key is not present" do
+        expect(success_key).to eq false
       end
     end
   end

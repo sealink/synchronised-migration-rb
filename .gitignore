@@ -3,3 +3,4 @@
 /coverage
 /*.gem
 Gemfile.lock
+config.yml
