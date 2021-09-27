@@ -16,12 +16,12 @@ module SynchronisedMigration
       @code = code
     end
 
-    def succesful?
+    def successful?
       [MIGRATION_SUCCESS, PREVIOUS_SUCCESS].include?(code)
     end
 
     def failure?
-      !succesful?
+      !successful?
     end
 
     def error_msg

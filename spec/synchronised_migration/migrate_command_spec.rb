@@ -28,7 +28,7 @@ describe SynchronisedMigration::Commands::Migrate do
     end
   end
 
-  context "when running a succesful migration" do
+  context "when running a successful migration" do
     let(:options) {
       {
         redis_uri: redis_uri,

@@ -28,7 +28,7 @@ describe SynchronisedMigration::Commands::Status do
     end
   end
 
-  context "when running a succesful status" do
+  context "when running a successful status" do
     let(:options) {
       {
         redis_uri: redis_uri,
@@ -40,7 +40,7 @@ describe SynchronisedMigration::Commands::Status do
     it { is_expected.to eq nil }
   end
 
-  context "when running a succesful status - with alternate state" do
+  context "when running a successful status - with alternate state" do
     let(:options) {
       {
         redis_uri: redis_uri,

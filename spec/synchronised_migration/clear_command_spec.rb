@@ -34,7 +34,7 @@ describe SynchronisedMigration::Commands::Clear do
     end
   end
 
-  context "when running a clear on fail key only" do
+  context "when running a clear - fail key only" do
     let(:options) {
       {
         redis_uri: redis_uri,
@@ -46,7 +46,7 @@ describe SynchronisedMigration::Commands::Clear do
     it { is_expected.to eq nil }
   end
 
-  context "when running a clear all keys" do
+  context "when running a clear - all keys" do
     let(:options) {
       {
         redis_uri: redis_uri,

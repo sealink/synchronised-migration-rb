@@ -20,7 +20,7 @@ describe SynchronisedMigration::Main do
     redis.flushdb
   end
 
-  context "when succesful migration" do
+  context "when successful migration" do
     subject { SynchronisedMigration::Main.new(configuration).call }
 
     before do
@@ -32,8 +32,8 @@ describe SynchronisedMigration::Main do
     end
 
     context "when executed" do
-      it "returns a succesful result" do
-        expect(subject).to be_succesful
+      it "returns a successful result" do
+        expect(subject).to be_successful
       end
 
       it "should have the correct status code" do
@@ -71,7 +71,7 @@ describe SynchronisedMigration::Main do
     end
   end
 
-  context "when re-running a succesful migration" do
+  context "when re-running a successful migration" do
     subject { SynchronisedMigration::Main.new(configuration).call }
 
     before do
@@ -79,8 +79,8 @@ describe SynchronisedMigration::Main do
     end
 
     context "when executed" do
-      it "returns a succesful result" do
-        expect(subject).to be_succesful
+      it "returns a successful result" do
+        expect(subject).to be_successful
       end
 
       it "should have the correct status code" do

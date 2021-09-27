@@ -33,7 +33,7 @@ module SynchronisedMigration
       option :application, type: :string, desc: "Application we are migrating"
       option :redis_uri, type: :string, desc: "Redis Server URI"
       option :debug, type: :boolean, desc: "Enable additional debugging output"
-      option :all, type: :boolean, default: false, desc: "Clear all keys including success"
+      option :all, type: :boolean, default: false, desc: "Clear all keys including success and lock"
 
       def call(**options)
         abort "Config location must be provided" if options[:config].nil?
@@ -85,7 +85,7 @@ module SynchronisedMigration
 
         success_key = config.success_key
         rows << if redis.exists?(success_key)
-          [success_key, "true", "Succesfully Migrated"]
+          [success_key, "true", "successfully Migrated"]
         else
           [success_key, "false", nil]
         end
