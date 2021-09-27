@@ -24,7 +24,7 @@ describe SynchronisedMigration::Main do
     subject { SynchronisedMigration::Main.new(configuration).call }
 
     before do
-      Timecop.freeze(Time.local(1990))
+      Timecop.freeze(Time.utc(1990))
     end
 
     after do
@@ -55,7 +55,7 @@ describe SynchronisedMigration::Main do
           {
             "application" => "test",
             "version" => "1.2.3",
-            "timestamp" => 631114200,
+            "timestamp" => 631152000,
             "command" => "spec/support/success-script"
           }
         )
