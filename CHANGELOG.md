@@ -1,6 +1,6 @@
 # Synchronised Migration
 
-## Unreleased
+## 3.0.0
 
 - [OPS-201] Migrate library to CLI tool
 
