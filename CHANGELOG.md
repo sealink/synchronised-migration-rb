@@ -1,5 +1,9 @@
 # Synchronised Migration
 
+## Unreleased
+
+- [OPS-201] Migrate library to CLI tool
+
 ## 2.2.0
 
 - [TT-8617] Update to build with github actions / ruby 3.0

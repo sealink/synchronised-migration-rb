@@ -7,10 +7,16 @@ jobs:
       matrix:
         ruby: ["2.6", "2.7", "3.0"]
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
     steps:
       - uses: actions/checkout@v2
       - uses: ruby/setup-ruby@v1
         with:
           ruby-version: ${{ matrix.ruby }}
           bundler-cache: true
+      - run: bundle exec standardrb
       - run: bundle exec rake

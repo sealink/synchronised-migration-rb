@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Failure Script"
+exit 1

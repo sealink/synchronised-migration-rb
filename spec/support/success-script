@@ -1,0 +1,4 @@
+#!/bin/sh
+
+echo "Happy Script"
+exit 0

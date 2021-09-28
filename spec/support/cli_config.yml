@@ -1,0 +1,3 @@
+command: bin/launch/custom_migrate
+redis_uri: redis://127.0.0.1:6379/10
+application: Quicktravel
