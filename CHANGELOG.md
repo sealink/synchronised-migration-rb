@@ -1,5 +1,10 @@
 # Synchronised Migration
 
+
+## 3.1.0
+
+- [PLAT-183] Ruby 3.1 and publish coverage with github action
+
 ## 3.0.0
 
 - [OPS-201] Migrate library to CLI tool
