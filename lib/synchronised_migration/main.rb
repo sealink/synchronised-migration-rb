@@ -67,7 +67,6 @@ module SynchronisedMigration
     def redis
       @redis ||= begin
         redis_opts = {url: @config.redis_uri}
-        redis_opts[:logger] = Logger.new($stdout) if @config.debug?
 
         Redis.new(redis_opts)
       end

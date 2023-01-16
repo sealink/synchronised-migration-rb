@@ -1,5 +1,9 @@
 # Synchronised Migration
 
+## Unreleased
+
+- [PLAT-1175] Update to Ruby 3.2
+
 ## 3.1.0
 
 - [PLAT-183] Ruby 3.1 and publish coverage with github action
