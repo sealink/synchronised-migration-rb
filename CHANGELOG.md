@@ -1,6 +1,6 @@
 # Synchronised Migration
 
-## Unreleased
+## 3.2.0
 
 - [PLAT-1175] Update to Ruby 3.2
 
